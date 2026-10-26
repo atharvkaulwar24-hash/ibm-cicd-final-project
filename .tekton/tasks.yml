@@ -1,0 +1,32 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: cleanup
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: remove-existing-files
+      image: alpine:3.20
+      script: |
+        #!/bin/sh
+        set -eu
+        find "$(workspaces.source.path)" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: jest-test
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: install-and-test
+      image: node:20-bookworm-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+        npm ci
+        npm test
